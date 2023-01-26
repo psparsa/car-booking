@@ -1,5 +1,11 @@
 import Head from 'next/head';
-import styles from '@/styles/Home.module.css';
+import { Roboto } from '@next/font/google';
+import { cc } from '@/utils/combineClassNames';
+
+const robotoFont = Roboto({
+  weight: '400',
+  subsets: ['latin'],
+});
 
 export default function Home() {
   return (
@@ -13,7 +19,14 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className={styles.Container}></main>
+      <main
+        className={cc([
+          robotoFont.className,
+          `w-screen min-h-screen flex flex-col items-center justify-center`,
+        ])}
+      >
+        Hello World!
+      </main>
     </>
   );
 }
