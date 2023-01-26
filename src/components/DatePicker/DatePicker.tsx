@@ -4,11 +4,26 @@ import dayjs, { Dayjs } from 'dayjs';
 import { range } from '@/utils/range';
 import { isNil } from '@/utils/isNil';
 
-export const DatePicker: React.FC = () => {
-  const [startDate, setStartDate] = React.useState<Dayjs | null>(null);
-  const [startHour, setStartHour] = React.useState<number | null>(null);
-  const [endDate, setEndDate] = React.useState<Dayjs | null>(null);
-  const [endHour, setEndHour] = React.useState<number | null>(null);
+type SetDate = (date: Dayjs | null) => void;
+type SetHour = (hour: number) => void;
+
+interface DatePickerProps {
+  values: {
+    startDate: Dayjs | null;
+    endDate: Dayjs | null;
+    startHour: number | null;
+    endHour: number | null;
+  };
+  onChange: {
+    startDate: SetDate;
+    endDate: SetDate;
+    startHour: SetHour;
+    endHour: SetHour;
+  };
+}
+
+export const DatePicker: React.FC<DatePickerProps> = ({ values, onChange }) => {
+  const { startDate, endDate, startHour, endHour } = values;
 
   const getDisabledDays = (current: Dayjs, end = true) => {
     const isPast = current && current < dayjs().startOf('day');
@@ -44,14 +59,14 @@ export const DatePicker: React.FC = () => {
       <AntDatePicker
         value={startDate}
         disabledDate={(current) => getDisabledDays(current)}
-        onChange={(x) => setStartDate(x)}
+        onChange={(x) => onChange.startDate(x)}
         className={FIELDS_CLASSNAMES}
       />
       <p className={TITLES_CLASSNAMES}>At what time?</p>
       <Select
         value={startHour}
         disabled={isNil(startDate)}
-        onChange={(v) => setStartHour(v)}
+        onChange={(v) => onChange.startHour(v)}
         options={formatAvilableHours(getAvailableHours())}
         className={FIELDS_CLASSNAMES}
       />
@@ -61,7 +76,7 @@ export const DatePicker: React.FC = () => {
         disabled={isNil(startDate) || isNil(startHour)}
         value={endDate}
         disabledDate={(current) => getDisabledDays(current, true)}
-        onChange={(x) => setEndDate(x)}
+        onChange={(x) => onChange.endDate(x)}
         className={FIELDS_CLASSNAMES}
       />
 
@@ -69,7 +84,7 @@ export const DatePicker: React.FC = () => {
       <Select
         value={endHour}
         disabled={isNil(startDate) || isNil(startHour) || isNil(endDate)}
-        onChange={(v) => setEndHour(v)}
+        onChange={(v) => onChange.endHour(v)}
         options={formatAvilableHours(getAvailableHours(true))}
         className={FIELDS_CLASSNAMES}
       />

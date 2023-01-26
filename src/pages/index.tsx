@@ -1,7 +1,11 @@
+import React from 'react';
 import Head from 'next/head';
 import { Roboto } from '@next/font/google';
 import { cc } from '@/utils/combineClassNames';
 import { DatePicker } from '@/components/DatePicker/DatePicker';
+import { Dayjs } from 'dayjs';
+import { NameForm } from '@/components/NameForm/NameForm';
+import { addReservation } from '@/reservation/add';
 
 const robotoFont = Roboto({
   weight: '400',
@@ -9,6 +13,24 @@ const robotoFont = Roboto({
 });
 
 export default function Home() {
+  const [startDate, setStartDate] = React.useState<Dayjs | null>(null);
+  const [endDate, setEndDate] = React.useState<Dayjs | null>(null);
+  const [startHour, setStartHour] = React.useState<number | null>(null);
+  const [endHour, setEndHour] = React.useState<number | null>(null);
+
+  const areDatesValid = !!startDate && !!endDate && !!startHour && !!endHour;
+
+  const [name, setName] = React.useState('');
+
+  const handleSubmit = () => {
+    if (areDatesValid)
+      addReservation({
+        name,
+        from: startDate.set('hour', startHour).valueOf(),
+        to: endDate.set('hour', endHour).valueOf(),
+      });
+  };
+
   return (
     <>
       <Head>
@@ -26,7 +48,28 @@ export default function Home() {
           `w-screen min-h-screen flex flex-col items-center justify-center`,
         ])}
       >
-        <DatePicker />
+        <DatePicker
+          values={{
+            startDate,
+            endDate,
+            startHour,
+            endHour,
+          }}
+          onChange={{
+            startDate: setStartDate,
+            endDate: setEndDate,
+            startHour: setStartHour,
+            endHour: setEndHour,
+          }}
+        />
+
+        <NameForm
+          name={name}
+          onChange={setName}
+          onSubmit={handleSubmit}
+          disable={!areDatesValid}
+          className="mt-4"
+        />
       </main>
     </>
   );
