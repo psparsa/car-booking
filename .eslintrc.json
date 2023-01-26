@@ -5,7 +5,7 @@
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended"
   ],
-  "plugins": ["const-case", "fp"],
+  "plugins": ["const-case", "fp", "prettier"],
   "rules": {
     "const-case/uppercase": "error",
     "fp/no-arguments": "error",
