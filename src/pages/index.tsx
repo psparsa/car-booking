@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import { Roboto } from '@next/font/google';
 import { cc } from '@/utils/combineClassNames';
+import { DatePicker } from '@/components/DatePicker/DatePicker';
 
 const robotoFont = Roboto({
   weight: '400',
@@ -25,7 +26,7 @@ export default function Home() {
           `w-screen min-h-screen flex flex-col items-center justify-center`,
         ])}
       >
-        Hello World!
+        <DatePicker />
       </main>
     </>
   );
