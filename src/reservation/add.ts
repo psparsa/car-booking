@@ -1,11 +1,7 @@
-interface ReservationProps {
-  name: string;
-  from: number;
-  to: number;
-}
+import { getReservations, Reservation } from './get';
 
-export const addReservation = (newReservation: ReservationProps) => {
-  const prevReservations = JSON.parse(localStorage.getItem('data') ?? '[]');
+export const addReservation = (newReservation: Reservation) => {
+  const prevReservations = getReservations();
 
   localStorage.setItem(
     'data',
