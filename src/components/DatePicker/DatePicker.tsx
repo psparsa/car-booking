@@ -39,10 +39,8 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     dayjs.extend(isBetween);
     const countOfReservations = reservations.filter((val) => {
       const from = dayjs(val.from);
-      const to = dayjs(val.to);
-      const isBetween = dayjs(current).isBetween(from, to);
       const isSame = current.isSame(from, 'day');
-      return isBetween || isSame;
+      return isSame;
     }).length;
 
     const style: React.CSSProperties = {
@@ -65,15 +63,21 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     );
   };
 
-  const getDisabledDays = (current: Dayjs, end = true) => {
+  const handleDisabledDays = (current: Dayjs, end = true) => {
     const isPast = current && current < dayjs().startOf('day');
     const isSaturday = current.day() === 6;
     const isSunday = current.day() === 0;
 
     const isUnvalidEndDate = () => {
       if (!end || current === null || startDate === null) return false;
+
+      const isMonday = current.day() === 1;
+      const isStartDayFriday = startDate.day() === 5;
+
       const isBeforeStartPoint = current.isBefore(startDate);
-      const isTheNextDayOfStartPoint = current.diff(startDate, 'days') > 1;
+      const isTheNextDayOfStartPoint =
+        current.diff(startDate, 'days') >
+        (isMonday && isStartDayFriday ? 3 : 1);
       return isTheNextDayOfStartPoint || isBeforeStartPoint;
     };
 
@@ -121,7 +125,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       <p className={TITLES_CLASSNAMES}>When you wanna take out the car?</p>
       <AntDatePicker
         value={startDate}
-        disabledDate={(current) => getDisabledDays(current)}
+        disabledDate={(current) => handleDisabledDays(current)}
         onChange={(x) => {
           setReservationsOfSelectedDay(getListOfReservations(x));
           onChange.startDate(x);
@@ -150,7 +154,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       <AntDatePicker
         disabled={isNil(startDate) || isNil(startHour)}
         value={endDate}
-        disabledDate={(current) => getDisabledDays(current, true)}
+        disabledDate={(current) => handleDisabledDays(current, true)}
         onChange={(x) => onChange.endDate(x)}
         className={FIELDS_CLASSNAMES}
       />
