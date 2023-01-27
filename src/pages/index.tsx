@@ -39,16 +39,18 @@ export default function Home() {
     withWho?: string;
   };
   const isThereACollision: IsThereACollision = () => {
+    const start = startDate?.set('hour', startHour as number);
+    const end = endDate?.set('hour', endHour as number);
     const tmp = reservations.findIndex((r) => {
-      const isStartBetween = dayjs(
-        startDate?.set('hour', startHour as number)
-      ).isBetween(dayjs(r.from), dayjs(r.to), null, '[]');
+      const doesStartHaveCollision =
+        start?.isBetween(dayjs(r.from), dayjs(r.to), null, '[]') ||
+        dayjs(r.from).isBetween(start, end, null, '[]');
 
-      const isEndBetween = dayjs(endDate)
-        ?.set('hour', endHour as number)
-        .isBetween(dayjs(r.from), dayjs(r.to), null, '[]');
+      const doesEndHaveCollision =
+        end?.isBetween(dayjs(r.from), dayjs(r.to), null, '[]') ||
+        dayjs(r.to).isBetween(start, end, null, '[]');
 
-      return isStartBetween || isEndBetween;
+      return doesStartHaveCollision || doesEndHaveCollision;
     });
 
     return tmp === -1
@@ -110,6 +112,7 @@ export default function Home() {
 
       return;
     }
+    alert('index:handleSubmit');
   };
 
   React.useEffect(() => setReservations(getReservations()), []);

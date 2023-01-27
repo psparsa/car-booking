@@ -22,8 +22,12 @@ export const NameForm: React.FC<NameFormProps> = ({
     if (/^[a-zA-Z ]*$/.test(value) || value === '') onChange(value);
   };
 
+  const isSubmitDisabled = disable || name.length < 1;
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const handleSubmit = React.useCallback(debounce(onSubmit, 500), []);
+  const handleSubmit = debounce(() => {
+    onSubmit();
+  }, 500);
 
   return (
     <div
@@ -46,9 +50,9 @@ export const NameForm: React.FC<NameFormProps> = ({
       <button
         className={cc([
           `bg-zinc-600 transition ease-in-out delay-50 text-green-50 px-2 py-1 rounded-md mt-2 w-24`,
-          !disable && 'hover:bg-zinc-800',
+          isSubmitDisabled ? 'opacity-50' : 'hover:bg-zinc-800',
         ])}
-        disabled={disable || name.length === 0}
+        disabled={isSubmitDisabled}
         onClick={handleSubmit}
       >
         Submit
