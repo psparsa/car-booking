@@ -62,7 +62,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     );
   };
 
-  const handleDisabledDays = (current: Dayjs, end = true) => {
+  const handleDisabledDays = (current: Dayjs, end = false) => {
     const isPast = current && current < dayjs().startOf('day');
     const isSaturday = current.day() === 6;
     const isSunday = current.day() === 0;

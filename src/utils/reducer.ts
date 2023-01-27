@@ -41,16 +41,20 @@ export const reducer = (state: States, action: Action): States => {
       return {
         ...state,
         startDate: action.payload,
+        startHour: null,
+        endDate: null,
       };
     case 'set-startHour':
       return {
         ...state,
         startHour: action.payload,
+        endHour: null,
       };
     case 'set-endDate':
       return {
         ...state,
         endDate: action.payload,
+        endHour: null,
       };
     case 'set-endHour':
       return {

@@ -16,6 +16,11 @@ export const NameForm: React.FC<NameFormProps> = ({
   disable,
   className,
 }) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    if (/^[a-zA-Z ]*$/.test(value) || value === '') onChange(value);
+  };
+
   return (
     <div
       className={cc([
@@ -27,7 +32,7 @@ export const NameForm: React.FC<NameFormProps> = ({
       <p>Please Enter your name:</p>
       <input
         value={name}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={handleChange}
         type="string"
         maxLength={20}
         className="mt-2 border-solid border-2 rounded-sm border-cyan-500 text-center"
@@ -39,7 +44,7 @@ export const NameForm: React.FC<NameFormProps> = ({
           `bg-zinc-600 transition ease-in-out delay-50 text-green-50 px-2 py-1 rounded-md mt-2 w-24`,
           !disable && 'hover:bg-zinc-800',
         ])}
-        disabled={disable}
+        disabled={disable || name.length === 0}
         onClick={onSubmit}
       >
         Submit
