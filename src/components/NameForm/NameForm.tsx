@@ -1,5 +1,6 @@
 import React from 'react';
 import { cc } from '@/utils/combineClassNames';
+import { debounce } from '@/utils/debounce';
 
 interface NameFormProps {
   name: string;
@@ -20,6 +21,9 @@ export const NameForm: React.FC<NameFormProps> = ({
     const value = event.target.value;
     if (/^[a-zA-Z ]*$/.test(value) || value === '') onChange(value);
   };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleSubmit = React.useCallback(debounce(onSubmit, 500), []);
 
   return (
     <div
@@ -45,7 +49,7 @@ export const NameForm: React.FC<NameFormProps> = ({
           !disable && 'hover:bg-zinc-800',
         ])}
         disabled={disable || name.length === 0}
-        onClick={onSubmit}
+        onClick={handleSubmit}
       >
         Submit
       </button>

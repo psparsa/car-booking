@@ -11,6 +11,7 @@ import { getReservations, Reservation } from '@/reservation/get';
 import { errorToast, successToast } from '@/utils/toast';
 import { parseFromToDates } from '@/utils/parseFromToDates';
 import { initialStates, reducer } from '@/utils/reducer';
+import { useSfx } from '@/utils/useSfx';
 dayjs.extend(isBetween);
 
 const robotoFont = Roboto({
@@ -19,6 +20,7 @@ const robotoFont = Roboto({
 });
 
 export default function Home() {
+  const { playSuccessSfx, playErrprSfx } = useSfx();
   const [state, dispatch] = React.useReducer(reducer, initialStates);
   const { startDate, startHour, endDate, endHour, name } = state;
 
@@ -67,6 +69,8 @@ export default function Home() {
         text: `There is a time collision with ${collision.withWho}`,
       });
 
+      playErrprSfx();
+
       return;
     }
 
@@ -78,6 +82,7 @@ export default function Home() {
 
     if (isADuplicateReservation) {
       setError(`You can't submit two reservation for a single day...`);
+      playErrprSfx();
       return;
     }
 
@@ -93,6 +98,8 @@ export default function Home() {
         startDate.set('hour', startHour),
         endDate.set('hour', endHour)
       );
+
+      playSuccessSfx();
 
       successToast({
         text: 'The car reserved for you!',
