@@ -1,15 +1,16 @@
 import React from 'react';
 import Head from 'next/head';
 import { Roboto } from '@next/font/google';
+import dayjs from 'dayjs';
 import { cc } from '@/utils/combineClassNames';
 import { DatePicker } from '@/components/DatePicker/DatePicker';
-import dayjs, { Dayjs } from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import { NameForm } from '@/components/NameForm/NameForm';
 import { addReservation } from '@/reservation/add';
 import { getReservations, Reservation } from '@/reservation/get';
 import { errorToast, successToast } from '@/utils/toast';
 import { parseFromToDates } from '@/utils/parseFromToDates';
+import { initialStates, reducer } from '@/utils/reducer';
 dayjs.extend(isBetween);
 
 const robotoFont = Roboto({
@@ -18,33 +19,23 @@ const robotoFont = Roboto({
 });
 
 export default function Home() {
+  const [state, dispatch] = React.useReducer(reducer, initialStates);
+  const { startDate, startHour, endDate, endHour, name } = state;
+
   const [reservations, setReservations] = React.useState<Reservation[]>([]);
-
-  const [startDate, setStartDate] = React.useState<Dayjs | null>(null);
-  const [endDate, setEndDate] = React.useState<Dayjs | null>(null);
-  const [startHour, setStartHour] = React.useState<number | null>(null);
-  const [endHour, setEndHour] = React.useState<number | null>(null);
-
   const [error, setError] = React.useState<string | undefined>(undefined);
 
   const areDatesValid = !!startDate && !!endDate && !!startHour && !!endHour;
 
-  const [name, setName] = React.useState('');
-
-  const resetDateStates = () => {
-    setStartDate(null);
-    setEndDate(null);
-    setStartHour(null);
-    setEndHour(null);
+  const resetStates = () => {
+    dispatch({ type: 'reset-states' });
     setError(undefined);
-    setName('');
   };
 
   type IsThereACollision = () => {
     status: 'fine' | 'collision';
     withWho?: string;
   };
-
   const isThereACollision: IsThereACollision = () => {
     const tmp = reservations.findIndex((r) => {
       const isStartBetween = dayjs(
@@ -58,19 +49,26 @@ export default function Home() {
       return isStartBetween || isEndBetween;
     });
 
-    if (tmp === -1)
-      return {
-        status: 'fine',
-      };
-
-    return {
-      status: 'collision',
-      withWho: reservations[tmp].name,
-    };
+    return tmp === -1
+      ? {
+          status: 'fine',
+        }
+      : {
+          status: 'collision',
+          withWho: reservations[tmp].name,
+        };
   };
 
   const handleSubmit = () => {
     const collision = isThereACollision();
+
+    if (collision.status === 'collision') {
+      errorToast({
+        text: `There is a time collision with ${collision.withWho}`,
+      });
+
+      return;
+    }
 
     const isADuplicateReservation =
       reservations.findIndex((r) => {
@@ -78,28 +76,32 @@ export default function Home() {
         return r.name === name && day.isSame(startDate, 'day');
       }) > -1;
 
-    if (collision.status === 'collision') {
-      errorToast({
-        text: `There is a time collision with ${collision.withWho}`,
-      });
-    } else if (isADuplicateReservation) {
+    if (isADuplicateReservation) {
       setError(`You can't submit two reservation for a single day...`);
-    } else if (areDatesValid) {
+      return;
+    }
+
+    if (areDatesValid) {
       addReservation({
         name,
         from: startDate.set('hour', startHour).valueOf(),
         to: endDate.set('hour', endHour).valueOf(),
       });
+
       setReservations(getReservations());
       const { parsedFrom, parsedTo } = parseFromToDates(
         startDate.set('hour', startHour),
         endDate.set('hour', endHour)
       );
+
       successToast({
         text: 'The car reserved for you!',
         hint: `From ${parsedFrom} until ${parsedTo}`,
       });
-      resetDateStates();
+
+      resetStates();
+
+      return;
     }
   };
 
@@ -130,10 +132,10 @@ export default function Home() {
             endHour,
           }}
           onChange={{
-            startDate: setStartDate,
-            endDate: setEndDate,
-            startHour: setStartHour,
-            endHour: setEndHour,
+            startDate: (d) => dispatch({ type: 'set-startDate', payload: d }),
+            endDate: (d) => dispatch({ type: 'set-endDate', payload: d }),
+            startHour: (h) => dispatch({ type: 'set-startHour', payload: h }),
+            endHour: (h) => dispatch({ type: 'set-endHour', payload: h }),
           }}
           reservations={reservations}
           error={error}
@@ -141,7 +143,7 @@ export default function Home() {
 
         <NameForm
           name={name}
-          onChange={setName}
+          onChange={(name) => dispatch({ type: 'set-name', payload: name })}
           onSubmit={handleSubmit}
           disable={!areDatesValid}
           className="mt-4"

@@ -1,12 +1,10 @@
 import React from 'react';
 import { DatePicker as AntDatePicker, Select, Tooltip } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
-import isBetween from 'dayjs/plugin/isBetween';
 import { range } from '@/utils/range';
 import { isNil } from '@/utils/isNil';
 import { Reservation } from '@/reservation/get';
 import { parseFromToDates } from '@/utils/parseFromToDates';
-dayjs.extend(isBetween);
 
 type SetDate = (date: Dayjs | null) => void;
 type SetHour = (hour: number) => void;
