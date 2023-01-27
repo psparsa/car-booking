@@ -4,11 +4,13 @@ import { Roboto } from '@next/font/google';
 import { cc } from '@/utils/combineClassNames';
 import { DatePicker } from '@/components/DatePicker/DatePicker';
 import dayjs, { Dayjs } from 'dayjs';
+import isBetween from 'dayjs/plugin/isBetween';
 import { NameForm } from '@/components/NameForm/NameForm';
 import { addReservation } from '@/reservation/add';
 import { getReservations, Reservation } from '@/reservation/get';
 import { successToast } from '@/utils/toast';
 import { parseFromToDates } from '@/utils/parseFromToDates';
+dayjs.extend(isBetween);
 
 const robotoFont = Roboto({
   weight: '400',
@@ -38,14 +40,46 @@ export default function Home() {
     setName('');
   };
 
+  type IsThereACollision = () => {
+    status: 'fine' | 'collision';
+    withWho?: string;
+  };
+
+  const isThereACollision: IsThereACollision = () => {
+    const tmp = reservations.findIndex((r) => {
+      const isStartBetween = dayjs(
+        startDate?.set('hour', startHour as number)
+      ).isBetween(dayjs(r.from), dayjs(r.to), null, '[]');
+      const isEndBetween = dayjs(endDate)
+        ?.set('hour', endHour as number)
+        .isBetween(dayjs(r.from), dayjs(r.to), null, '[]');
+
+      return isStartBetween || isEndBetween;
+    });
+
+    if (tmp === -1)
+      return {
+        status: 'fine',
+      };
+
+    return {
+      status: 'collision',
+      withWho: reservations[tmp].name,
+    };
+  };
+
   const handleSubmit = () => {
-    const isADuplicateReserv =
+    const collision = isThereACollision();
+
+    const isADuplicateReservation =
       reservations.findIndex((r) => {
         const day = dayjs(r.from);
         return r.name === name && day.isSame(startDate, 'day');
       }) > -1;
 
-    if (isADuplicateReserv) {
+    if (collision.status === 'collision') {
+      setError(`Ops! There is a time collision with ${collision.withWho}`);
+    } else if (isADuplicateReservation) {
       setError(`You can't submit two reservation for a single day...`);
     } else if (areDatesValid) {
       addReservation({

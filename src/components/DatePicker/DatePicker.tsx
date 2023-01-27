@@ -6,6 +6,7 @@ import { range } from '@/utils/range';
 import { isNil } from '@/utils/isNil';
 import { Reservation } from '@/reservation/get';
 import { parseFromToDates } from '@/utils/parseFromToDates';
+dayjs.extend(isBetween);
 
 type SetDate = (date: Dayjs | null) => void;
 type SetHour = (hour: number) => void;
@@ -37,7 +38,6 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     React.useState<string[]>([]);
 
   const handleDateRender = (current: Dayjs) => {
-    dayjs.extend(isBetween);
     const countOfReservations = reservations.filter((val) => {
       const from = dayjs(val.from);
       const isSame = current.isSame(from, 'day');
