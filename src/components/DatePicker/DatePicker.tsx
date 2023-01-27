@@ -5,6 +5,7 @@ import isBetween from 'dayjs/plugin/isBetween';
 import { range } from '@/utils/range';
 import { isNil } from '@/utils/isNil';
 import { Reservation } from '@/reservation/get';
+import { parseFromToDates } from '@/utils/parseFromToDates';
 
 type SetDate = (date: Dayjs | null) => void;
 type SetHour = (hour: number) => void;
@@ -98,22 +99,17 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   const getListOfReservations = (date: Dayjs | null) => {
     if (isNil(date)) return [];
 
-    const formatHour = (n: number) => n + (n < 12 ? ' AM' : ' PM');
-
     const tmp = reservations
       .filter((x) => {
         return date?.isSame(dayjs(x.from), 'day');
       })
       .map((x) => {
-        const name = x.name;
-        const _from = dayjs(x.from);
-        const from = _from.get('hour');
-        const _to = dayjs(x.to);
-        const to = _to.isSame(_from)
-          ? _to.get('hour')
-          : `${_to.format('dddd')} at ${formatHour(_to.get('hour'))}`;
+        const { parsedFrom, parsedTo } = parseFromToDates(
+          dayjs(x.from),
+          dayjs(x.to)
+        );
 
-        return `${name} - ${formatHour(from)} → ${to}`;
+        return `${x.name} - ${parsedFrom} → ${parsedTo}`;
       });
     return tmp;
   };

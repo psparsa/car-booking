@@ -7,6 +7,8 @@ import dayjs, { Dayjs } from 'dayjs';
 import { NameForm } from '@/components/NameForm/NameForm';
 import { addReservation } from '@/reservation/add';
 import { getReservations, Reservation } from '@/reservation/get';
+import { successToast } from '@/utils/toast';
+import { parseFromToDates } from '@/utils/parseFromToDates';
 
 const robotoFont = Roboto({
   weight: '400',
@@ -51,8 +53,16 @@ export default function Home() {
         from: startDate.set('hour', startHour).valueOf(),
         to: endDate.set('hour', endHour).valueOf(),
       });
-      resetDateStates();
       setReservations(getReservations());
+      const { parsedFrom, parsedTo } = parseFromToDates(
+        startDate.set('hour', startHour),
+        endDate.set('hour', endHour)
+      );
+      successToast({
+        text: 'The car reserved for you!',
+        hint: `From ${parsedFrom} until ${parsedTo}`,
+      });
+      resetDateStates();
     }
   };
 
