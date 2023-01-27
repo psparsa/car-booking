@@ -9,7 +9,7 @@ import { NameForm } from '@/components/NameForm/NameForm';
 import { addReservation } from '@/reservation/add';
 import { getReservations, Reservation } from '@/reservation/get';
 import { errorToast, successToast } from '@/utils/toast';
-import { parseFromToDates } from '@/utils/parseFromToDates';
+import { formatDuration } from '@/utils/formatDuration';
 import { initialStates, reducer } from '@/utils/reducer';
 import { useSfx } from '@/utils/useSfx';
 dayjs.extend(isBetween);
@@ -96,7 +96,7 @@ export default function Home() {
       });
 
       setReservations(getReservations());
-      const { parsedFrom, parsedTo } = parseFromToDates(
+      const { parsedFrom, parsedTo } = formatDuration(
         startDate.set('hour', startHour),
         endDate.set('hour', endHour)
       );

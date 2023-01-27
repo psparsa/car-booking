@@ -4,7 +4,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { range } from '@/utils/range';
 import { isNil } from '@/utils/isNil';
 import { Reservation } from '@/reservation/get';
-import { parseFromToDates } from '@/utils/parseFromToDates';
+import { formatDuration } from '@/utils/formatDuration';
 
 type SetDate = (date: Dayjs | null) => void;
 type SetHour = (hour: number) => void;
@@ -102,7 +102,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         return date?.isSame(dayjs(x.from), 'day');
       })
       .map((x) => {
-        const { parsedFrom, parsedTo } = parseFromToDates(
+        const { parsedFrom, parsedTo } = formatDuration(
           dayjs(x.from),
           dayjs(x.to)
         );
