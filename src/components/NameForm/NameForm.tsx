@@ -20,7 +20,7 @@ export const NameForm: React.FC<NameFormProps> = ({
     <div
       className={cc([
         className,
-        `flex flex-col items-center w-80 bg-gray-100 p-4 rounded-lg`,
+        `flex flex-col items-center w-80 bg-gray-100 p-4 rounded-lg shadow-lg`,
         disable && 'opacity-70',
       ])}
     >

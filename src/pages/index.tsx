@@ -8,7 +8,7 @@ import isBetween from 'dayjs/plugin/isBetween';
 import { NameForm } from '@/components/NameForm/NameForm';
 import { addReservation } from '@/reservation/add';
 import { getReservations, Reservation } from '@/reservation/get';
-import { successToast } from '@/utils/toast';
+import { errorToast, successToast } from '@/utils/toast';
 import { parseFromToDates } from '@/utils/parseFromToDates';
 dayjs.extend(isBetween);
 
@@ -50,6 +50,7 @@ export default function Home() {
       const isStartBetween = dayjs(
         startDate?.set('hour', startHour as number)
       ).isBetween(dayjs(r.from), dayjs(r.to), null, '[]');
+
       const isEndBetween = dayjs(endDate)
         ?.set('hour', endHour as number)
         .isBetween(dayjs(r.from), dayjs(r.to), null, '[]');
@@ -78,7 +79,9 @@ export default function Home() {
       }) > -1;
 
     if (collision.status === 'collision') {
-      setError(`Ops! There is a time collision with ${collision.withWho}`);
+      errorToast({
+        text: `There is a time collision with ${collision.withWho}`,
+      });
     } else if (isADuplicateReservation) {
       setError(`You can't submit two reservation for a single day...`);
     } else if (areDatesValid) {
@@ -116,7 +119,7 @@ export default function Home() {
       <main
         className={cc([
           robotoFont.className,
-          `w-screen min-h-screen flex flex-col items-center justify-center`,
+          `w-screen min-h-screen flex flex-col items-center justify-center bg-neutral-200`,
         ])}
       >
         <DatePicker

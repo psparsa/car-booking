@@ -87,7 +87,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 
   const getAvailableHours = (end = false) => {
     if (end && startDate && startHour) {
-      if (startDate.isSame(endDate, 'day')) return range(startHour + 2, 17);
+      if (startDate.isSame(endDate, 'day')) return range(startHour + 1, 17);
       return range(9, 11);
     }
     return range(9, 17);
@@ -117,7 +117,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   const TITLES_CLASSNAMES = 'mb-2 mt-4';
   const FIELDS_CLASSNAMES = 'w-3/4';
   return (
-    <div className="flex flex-col items-center w-80 bg-gray-100 p-4 rounded-lg">
+    <div className="flex flex-col items-center w-80 bg-gray-100 p-4 rounded-lg shadow-lg">
       <p className={TITLES_CLASSNAMES}>When you wanna take out the car?</p>
       <AntDatePicker
         value={startDate}
