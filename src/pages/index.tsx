@@ -1,7 +1,7 @@
 import React from 'react';
 import Head from 'next/head';
 import { Roboto } from '@next/font/google';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { cc } from '@/utils/combineClassNames';
 import { DatePicker } from '@/components/DatePicker/DatePicker';
 import isBetween from 'dayjs/plugin/isBetween';
@@ -12,6 +12,7 @@ import { errorToast, successToast } from '@/utils/toast';
 import { formatDuration } from '@/utils/formatDuration';
 import { initialStates, reducer } from '@/utils/reducer';
 import { useSfx } from '@/utils/useSfx';
+import { isNil } from '@/utils/isNil';
 dayjs.extend(isBetween);
 
 const robotoFont = Roboto({
@@ -38,33 +39,39 @@ export default function Home() {
     status: 'fine' | 'collision';
     withWho?: string;
   };
-  const isThereACollision: IsThereACollision = () => {
-    const start = startDate?.set('hour', startHour as number);
-    const end = endDate?.set('hour', endHour as number);
-    const tmp = reservations.findIndex((r) => {
+  const findCollision: IsThereACollision = () => {
+    const start = startDate?.set('hour', startHour as number) as Dayjs;
+    const end = endDate?.set('hour', endHour as number) as Dayjs;
+
+    const changeHour = (d: Dayjs, action: 'increase' | 'decrease') => {
+      const hour = d.get('hour');
+      return d.set('hour', action === 'increase' ? hour + 1 : hour - 1);
+    };
+
+    const reservationWithCollasion = reservations.find((r) => {
       const doesStartHaveCollision =
-        start?.isBetween(dayjs(r.from), dayjs(r.to), null, '[]') ||
-        dayjs(r.from).isBetween(start, end, null, '[]');
+        changeHour(start, 'increase').isBetween(dayjs(r.from), dayjs(r.to)) ||
+        dayjs(r.from).isBetween(start, changeHour(end, 'decrease'));
 
       const doesEndHaveCollision =
-        end?.isBetween(dayjs(r.from), dayjs(r.to), null, '[]') ||
-        dayjs(r.to).isBetween(start, end, null, '[]');
+        changeHour(end, 'decrease').isBetween(dayjs(r.from), dayjs(r.to)) ||
+        dayjs(r.to).isBetween(changeHour(start, 'increase'), end);
 
       return doesStartHaveCollision || doesEndHaveCollision;
     });
 
-    return tmp === -1
+    return isNil(reservationWithCollasion)
       ? {
           status: 'fine',
         }
       : {
           status: 'collision',
-          withWho: reservations[tmp].name,
+          withWho: reservationWithCollasion?.name,
         };
   };
 
   const handleSubmit = () => {
-    const collision = isThereACollision();
+    const collision = findCollision();
 
     if (collision.status === 'collision') {
       errorToast({

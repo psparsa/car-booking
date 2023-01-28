@@ -5,6 +5,8 @@ import { range } from '@/utils/range';
 import { isNil } from '@/utils/isNil';
 import { Reservation } from '@/reservation/get';
 import { formatDuration } from '@/utils/formatDuration';
+import isBetween from 'dayjs/plugin/isBetween';
+dayjs.extend(isBetween);
 
 type SetDate = (date: Dayjs | null) => void;
 type SetHour = (hour: number) => void;
@@ -47,7 +49,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       background: `rgba(0, 128, 0, ${countOfReservations / 10})`,
     };
 
-    const tmp = (
+    const dayNode = (
       <div className="ant-picker-cell-inner" style={style}>
         {current.date()}
       </div>
@@ -55,10 +57,10 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 
     return countOfReservations > 0 ? (
       <Tooltip placement="top" title={`Reservations: ${countOfReservations}`}>
-        {tmp}
+        {dayNode}
       </Tooltip>
     ) : (
-      tmp
+      dayNode
     );
   };
 
@@ -83,21 +85,56 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     return isPast || isSaturday || isSunday || isUnvalidEndDate();
   };
 
-  const getAvailableHours = (end = false) => {
-    if (end && startDate && startHour) {
-      if (startDate.isSame(endDate, 'day')) return range(startHour + 1, 17);
-      return range(9, 11);
-    }
+  const getHoursOptions = (end = false) => {
+    if (end && startDate && startHour)
+      return startDate.isSame(endDate, 'day')
+        ? range(startHour + 1, 17)
+        : range(9, 11);
+
     return range(9, 17);
   };
 
-  const formatAvilableHours = (list: number[]) =>
+  const removeUnvailableHours = (l: number[], filterStartHours = true) => {
+    if (startDate && filterStartHours) {
+      const x = l.filter((hour) => {
+        const currentDate = startDate.set('hour', hour);
+        const lastHour = dayjs(
+          currentDate.set('hour', currentDate.get('hour') - 1)
+        );
+        const nextHour = dayjs(
+          currentDate.set('hour', currentDate.get('hour') + 1)
+        );
+
+        const findCollisionWithCurrentDate = reservations.find((x) => {
+          if (dayjs(currentDate).isBetween(x.from, x.to)) {
+            if (!nextHour.isBetween(x.from, x.to)) false;
+            return true;
+          }
+          if (
+            lastHour.isBetween(x.from, x.to) ||
+            nextHour.isBetween(x.from, x.to)
+          )
+            return true;
+
+          return false;
+        });
+
+        return isNil(findCollisionWithCurrentDate);
+      });
+
+      return x;
+    }
+
+    return l;
+  };
+
+  const formatHoursOptions = (list: number[]) =>
     list.map((x) => ({ value: x, label: x }));
 
   const getListOfReservations = (date: Dayjs | null) => {
     if (isNil(date)) return [];
 
-    const tmp = reservations
+    const formattedReservations = reservations
       .filter((x) => {
         return date?.isSame(dayjs(x.from), 'day');
       })
@@ -109,14 +146,31 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 
         return `${x.name} - ${parsedFrom} → ${parsedTo}`;
       });
-    return tmp;
+    return formattedReservations;
   };
+
+  const startHoursOption = formatHoursOptions(
+    removeUnvailableHours(getHoursOptions())
+  );
+  const endHoursOption = formatHoursOptions(
+    removeUnvailableHours(getHoursOptions(true), false)
+  );
+
+  const noAvilableTimeHint = (
+    <p className="mb-1 mt-3 text-center  text-red-600">
+      There is no available time! Choose another day
+    </p>
+  );
 
   const TITLES_CLASSNAMES = 'mb-2 mt-4';
   const FIELDS_CLASSNAMES = 'w-3/4';
   return (
     <div className="flex flex-col items-center w-80 bg-gray-100 p-4 rounded-lg shadow-lg">
-      <p className={TITLES_CLASSNAMES}>When you wanna take out the car?</p>
+      {startHoursOption.length === 0 ? (
+        noAvilableTimeHint
+      ) : (
+        <p className={TITLES_CLASSNAMES}>When you wanna take out the car?</p>
+      )}
       <AntDatePicker
         value={startDate}
         disabledDate={(current) => handleDisabledDays(current)}
@@ -128,9 +182,11 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         dateRender={handleDateRender}
       />
       {!isNil(startDate) && reservationsOfSelectedDay.length > 0 && (
-        <ul>
+        <ul className="mt-2">
           {reservationsOfSelectedDay.map((item) => (
-            <li key={item}>{item}</li>
+            <li className="text-xs my-1" key={item}>
+              {item}
+            </li>
           ))}
         </ul>
       )}
@@ -138,13 +194,17 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       <p className={TITLES_CLASSNAMES}>At what time?</p>
       <Select
         value={startHour}
-        disabled={isNil(startDate)}
+        disabled={isNil(startDate) || startHoursOption.length === 0}
         onChange={(v) => onChange.startHour(v)}
-        options={formatAvilableHours(getAvailableHours())}
+        options={startHoursOption}
         className={FIELDS_CLASSNAMES}
       />
 
-      <p className={TITLES_CLASSNAMES}>When will you return the car?</p>
+      {endHoursOption.length === 0 ? (
+        noAvilableTimeHint
+      ) : (
+        <p className={TITLES_CLASSNAMES}>When will you return the car?</p>
+      )}
       <AntDatePicker
         disabled={isNil(startDate) || isNil(startHour)}
         value={endDate}
@@ -156,9 +216,14 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       <p className={TITLES_CLASSNAMES}>At what time?</p>
       <Select
         value={endHour}
-        disabled={isNil(startDate) || isNil(startHour) || isNil(endDate)}
+        disabled={
+          isNil(startDate) ||
+          isNil(startHour) ||
+          isNil(endDate) ||
+          endHoursOption.length === 0
+        }
         onChange={(v) => onChange.endHour(v)}
-        options={formatAvilableHours(getAvailableHours(true))}
+        options={endHoursOption}
         className={FIELDS_CLASSNAMES}
       />
 
